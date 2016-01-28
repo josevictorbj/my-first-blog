@@ -1,0 +1,108 @@
+Cómo Instalar PIP, Virtualenv y Django
+
+Instalar PIP:
+    sudo apt-get install python-setuptools python-dev build-essential
+    sudo easy_install pip
+
+Una vez instalado PIP:
+    sudo pip install --upgrade virtualenv
+Listo, virtualenv instalado
+
+Instalar Django
+Entro a la carpeta del proyecto y creo mi entorno virtual:
+    virtualenv myvenv
+
+    Activo el ambiente virtual:
+    source myvenv/bin/activate
+
+Debe aparecer el prompt asi: (myvenv)jbernal@marce:$
+
+Instalamos Django:
+    pip install Django
+
+Ver que paquetes estan instalados:
+    pip freeze
+
+Para trabajar con MySql:
+    sudo apt-get install python-dev
+    sudo apt-get install libmysqlclient-dev
+
+Instalar MySQLdb:
+    pip install mysql-python
+
+Ya esta Django con mysqldb corriendo en un virtualenv
+Repetir el proceso por cuantos proyectos se quieran hacer
+
+Creo el proyecto:
+    django-admin startproject mysite .
+
+Configurar archivo settings.py:
+Modifico la línea que contiene TIME_ZONE asi:
+    TIME_ZONE = 'America/Bogota'
+Y al final del archivo settings.py agrego esta linea:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+En la linea databases queda asi:
+    DATABASES = {
+        'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'aprendodjango',
+        'USER': 'root',
+        'PASSWORD': 'control',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+          }
+    }
+
+ Para crear una base de datos para el blog:
+    python manage.py migrate
+
+Ahora prendemos el servidor desde la carpeta del proyecto asi:
+    python manage.py runserver
+
+Verificamos en el navegador:
+    http://127.0.0.1:8000/
+
+Crear la aplicacion dentro de la carpeta del proyecto
+    python manage.py startapp blog
+
+Después de crear una aplicación también necesitamos decirle a Django que debe utilizarla. Lo hacemos en el
+archivo misitio/settings.py. Tenemos que encontrar INSTALLED_APPS y añadir una línea que contiene 'blog',
+justo por encima del )
+
+En el archivo blog/models.py definimos todos los objetos llamados Models - este es un lugar en el cual definiremos
+nuestro modelo post. Vamos abrir blog/models.py, quitamos todo y escribimos un código como este:
+    from django.db import models
+    from django.utils import timezone
+
+    class Post(models.Model):
+        author = models.ForeignKey('auth.User')
+        title = models.CharField(max_length=200)
+        text = models.TextField()
+        created_date = models.DateTimeField(
+                default=timezone.now)
+        published_date = models.DateTimeField(
+                blank=True, null=True)
+
+        def publish(self):
+            self.published_date = timezone.now()
+            self.save()
+
+        def __str__(self):
+            return self.title
+            
+Añadir el modelo a la base de datos:
+    python manage.py makemigrations blog
+
+Django preparará un archivo de migración que tenemos que aplicar ahora a nuestra base de datos, con el servidor arriba
+escribimos:
+    python manage.py migrate blog
+
+Para agregar, editar y borrar los posts que hemos modelado, utilizaremos el administrador de Django.
+Vamos a abrir el archivo blog/admin.py y reemplazar su contenido con esto:
+
+    from django.contrib import admin
+    from .models import Post
+
+    admin.site.register(Post)
+Ahora estando el servidor arriba verificamos en el navegador:
+    http://127.0.0.1:8000/admin/
